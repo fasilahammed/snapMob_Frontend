@@ -3,8 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "r
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
-import PrivateRoute from './routes/PrivateRoute';
-import AdminRoute from './routes/AdminRoute';
+
 import PublicOnlyRoute from './routes/PublicOnlyRoute';
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -18,6 +17,7 @@ import AdminOrders from './admin/AdminOrders';
 import AdminLayout from './admin/AdminLayout';
 import UserDetails from './admin/components/UserDetails';
 import ProductForm from './admin/components/ProductForm';
+import ProtectedRoute from './routes/ProtectedRoute';
 
 // Lazy-loaded pages
 const Home = lazy(() => import("./pages/Home"));
@@ -37,12 +37,12 @@ const HomeRouteHandler = () => {
   const { user, loading } = useAuth();
 
   if (loading) return <Loading />;
-  
+
   // Redirect admins to admin dashboard
   if (user?.role === 'admin') {
     return <Navigate to="/admin" replace />;
   }
-  
+
   // Blocked users should be logged out automatically
   if (user?.status === 'blocked') {
     return <Navigate to="/login" replace state={{ blocked: true }} />;
@@ -100,7 +100,7 @@ function Layout() {
             } />
 
             {/* Protected user routes */}
-            <Route element={<PrivateRoute />}>
+            <Route element={<ProtectedRoute />}>
               <Route path="/products" element={<Products />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/profile" element={<Profile />} />
@@ -112,7 +112,7 @@ function Layout() {
             </Route>
 
             {/* Admin-only routes */}
-            <Route path="/admin" element={<AdminRoute />}>
+            <Route path="/admin" element={<ProtectedRoute role="admin" />}>
               <Route element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />

@@ -14,13 +14,19 @@ export default function Register() {
   const [error, setError] = useState('');
 
   const onSubmit = async (data) => {
-    try {
-      await authRegister(data);
-      navigate('/');
-    } catch (err) {
-      setError(err.message || 'Registration failed. Email may already exist.');
-    }
-  };
+  try {
+    const success = await authRegister({
+      name: data.name,
+      email: data.email,
+      password: data.password,
+    });
+
+    if (success) navigate("/");
+  } catch (err) {
+    setError("Registration failed. Please try again.");
+  }
+};
+
 
    useEffect(() => {
     if (user) {

@@ -1,4 +1,4 @@
-import React, { useState ,useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,7 +6,7 @@ import { FiEye, FiEyeOff } from 'react-icons/fi';
 import logo from '../../assets/img/snapmob-logo.png';
 
 export default function Login() {
-  const { user ,login } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [showPassword, setShowPassword] = useState(false);
@@ -14,21 +14,16 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
 
   const onSubmit = async ({ email, password }) => {
-    try {
-      const userData = await login(email, password, rememberMe);
-
-      // Role-based navigation
-      if (userData?.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
-    } catch {
-      setError('Invalid email or password');
+    const result = await login(email, password, rememberMe);
+    if (result.success) {
+      navigate(result.role === "admin" ? "/admin" : "/");
+    } else {
+      setError("Invalid credentials");
     }
   };
 
-   useEffect(() => {
+
+  useEffect(() => {
     if (user) {
       navigate(user.role === 'admin' ? '/admin' : '/', { replace: true });
     }
@@ -37,7 +32,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-r from-orange-50 to-gray-50 flex items-center justify-center">
       <div className="w-[80%] flex bg-white rounded-xl shadow-lg overflow-hidden">
-        
+
         {/* Left Side - Branding */}
         <div className="hidden md:flex flex-col justify-center items-center w-1/2 p-12 bg-white">
           <img src={logo} alt="SnapMob Logo" className="h-24 mb-6" />
@@ -73,7 +68,7 @@ export default function Login() {
                       message: 'Invalid email address'
                     }
                   })}
-                  type="email" 
+                  type="email"
                   placeholder="you@example.com"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
                 />
@@ -105,7 +100,7 @@ export default function Login() {
                 )}
               </div>
 
-             
+
 
               {/* Submit */}
               <button
