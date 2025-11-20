@@ -5,22 +5,23 @@ import { Link, useNavigate } from 'react-router-dom';
 import emptyCart from '../assets/img/empty-cart.svg';
 
 export default function Cart() {
-  const { 
-    cart, 
-    cartCount, 
-    removeFromCart, 
-    updateQuantity, 
+  const {
+    cart,
+    cartCount,
+    cartItemsCount,
+    removeFromCart,
+    updateQuantity,
     totalPrice,
-    clearCart 
+    clearCart
   } = useCart();
   const navigate = useNavigate();
 
   if (cartCount === 0) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-12 text-center">
-        <img 
-          src={emptyCart} 
-          alt="Empty Cart" 
+        <img
+          src={emptyCart}
+          alt="Empty Cart"
           className="w-64 h-64 mx-auto mb-8"
         />
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Your cart is empty</h2>
@@ -44,7 +45,7 @@ export default function Cart() {
         <div className="lg:w-2/3">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800">
-              Your Cart ({cartCount} {cartCount === 1 ? 'item' : 'items'})
+              Your Cart ({cartItemsCount} {cartItemsCount === 1 ? 'item' : 'items'})
             </h1>
             <button
               onClick={clearCart}
@@ -56,13 +57,16 @@ export default function Cart() {
 
           <div className="space-y-4">
             {cart.map((item) => (
-              <div 
-                key={item.id} 
+              <div
+                key={item.id}
                 className="bg-white rounded-lg shadow-sm p-4 flex flex-col sm:flex-row gap-4"
               >
-                <div className="w-full sm:w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
+                <div
+                  onClick={() => navigate(`/products/${item.productId}`)}
+                  className="w-full sm:w-32 h-32 bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition"
+                >
                   <img
-                    src={item.images[0]}
+                    src={item.image}
                     alt={item.name}
                     className="w-full h-full object-contain"
                   />
@@ -87,11 +91,21 @@ export default function Cart() {
                       </button>
                       <span className="px-4">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="px-3 py-1 bg-gray-100 hover:bg-gray-200 transition-colors"
+                        onClick={() => {
+                          if (item.quantity >= item.stock) {
+                            toast.error(`${item.name} has only ${item.stock} in stock`);
+                            return;
+                          }
+                          updateQuantity(item.id, item.quantity + 1);
+                        }}
+                        className={`px-3 py-1 transition-colors ${item.quantity >= item.stock
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : "bg-gray-100 hover:bg-gray-200"
+                          }`}
                       >
                         <FiPlus />
                       </button>
+
                     </div>
 
                     <button
@@ -108,10 +122,10 @@ export default function Cart() {
         </div>
 
         {/* Order Summary */}
-              <div className="lg:w-1/3">
+        <div className="lg:w-1/3">
           <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Order Summary</h2>
-            
+
             <div className="space-y-3 mb-6">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
@@ -127,12 +141,27 @@ export default function Cart() {
               </div>
             </div>
 
-            <button 
-              onClick={() => navigate('/checkout')}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-medium transition-colors"
+            <button
+              onClick={() => {
+                const outOfStockItem = cart.find(item => item.quantity > item.stock);
+
+                if (outOfStockItem) {
+                  toast.error(`${outOfStockItem.name} is out of stock`);
+                  return;
+                }
+
+                navigate('/checkout');
+              }}
+              className={`w-full py-3 rounded-lg font-medium transition-colors
+              ${cart.some(item => item.quantity > item.stock)
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-orange-500 hover:bg-orange-600 text-white"
+                }`}
+              disabled={cart.some(item => item.quantity > item.stock)}
             >
               Proceed to Checkout
             </button>
+
 
             <p className="text-xs text-gray-500 mt-4 text-center">
               Free shipping on all orders

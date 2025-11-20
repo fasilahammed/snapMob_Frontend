@@ -18,6 +18,7 @@ import AdminLayout from './admin/AdminLayout';
 import UserDetails from './admin/components/UserDetails';
 import ProductForm from './admin/components/ProductForm';
 import ProtectedRoute from './routes/ProtectedRoute';
+import ProductDetails from './pages/ProductDetails';
 
 // Lazy-loaded pages
 const Home = lazy(() => import("./pages/Home"));
@@ -63,8 +64,10 @@ function Layout() {
   const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname) && !isAdminPage;
 
   // Footer visible only on these pages (and not admin)
-  const footerPaths = ['/', '/products', '/cart', '/wishlist'];
-  const shouldShowFooter = footerPaths.includes(location.pathname) && !isAdminPage;
+  const footerPaths = ['/', '/products'];
+  const shouldShowFooter =
+    (location.pathname === "/" || location.pathname.startsWith("/products"))
+    && !isAdminPage;
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -100,8 +103,11 @@ function Layout() {
             } />
 
             {/* Protected user routes */}
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:id" element={<ProductDetails />} />
+
+            {/* Protected user pages */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/products" element={<Products />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/orders" element={<Orders />} />

@@ -2106,6 +2106,19 @@
         "https://m.media-amazon.com/images/I/51yTPZfNbCL._AC_UL640_FMwebp_QL65_.jpg"
       ],
       "isActive": true
+    },
+    {
+      "id": "7b89",
+      "name": "iPhone 17 Pro Max ",
+      "brand": "Apple",
+      "category": "smartphones",
+      "price": 219999,
+      "stock": 30,
+      "description": "iPhone 17 Pro Max 2 TB: 17.42 cm (6.9″) Display with Promotion, A19 Pro Chip, Best Battery Life in Any iPhone Ever, Pro Fusion Camera System, Center Stage Front Camera; Deep Blue",
+      "images": [
+        "https://m.media-amazon.com/images/I/31Bn8sQI3xL._SX342_SY445_QL70_FMwebp_.jpg"
+      ],
+      "isActive": true
     }
   ],
   "orders": [

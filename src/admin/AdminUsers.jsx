@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import AdminLoading from './components/AdminLoading';
+import dotnetAPI from '../Api\'s/dotnetAPI';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -18,10 +19,11 @@ const AdminUsers = () => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('https://snapmobdb-1.onrender.com/users');
-        setUsers(response.data);
+        const response = await dotnetAPI.get("/user");
+        setUsers(response.data.data);
+
       } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error( error);
         toast.error('Failed to load users');
       } finally {
         setLoading(false);
@@ -37,36 +39,35 @@ const AdminUsers = () => {
     user.role?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const toggleBlockStatus = async (userId, isBlocked) => {
-    try {
-      const newBlockStatus = !isBlocked;
-      await axios.patch(`https://snapmobdb-1.onrender.com/users/${userId}`, {
-        isBlocked: newBlockStatus
-      });
+const toggleBlockStatus = async (userId) => {
+  try {
+    const res = await dotnetAPI.patch(`/user/block-unblock/${userId}`);
 
-      setUsers(users.map(user =>
-        user.id === userId ? { ...user, isBlocked: newBlockStatus } : user
-      ));
+    setUsers(users.map(u =>
+      u.id === userId ? { ...u, isBlocked: !u.isBlocked } : u
+    ));
 
-      toast.success(`User ${newBlockStatus ? 'blocked' : 'unblocked'}`);
-    } catch (error) {
-      console.error('Error updating block status:', error);
-      toast.error('Failed to update block status');
-    }
-  };
+    toast.success(res.data.message);
+  } catch (error) {
+    toast.error("Failed to update block status");
+  }
+};
+
+
 
   const deleteUser = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
+  if (!window.confirm("Are you sure?")) return;
 
-    try {
-      await axios.delete(`https://snapmobdb-1.onrender.com/users/${userId}`);
-      setUsers(users.filter(user => user.id !== userId));
-      toast.success('User deleted successfully');
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error('Failed to delete user');
-    }
-  };
+  try {
+    const res = await dotnetAPI.delete(`/user/${userId}`);
+
+    setUsers(users.filter(u => u.id !== userId));
+    toast.success(res.data.message);
+  } catch (error) {
+    toast.error("Failed to delete user");
+  }
+};
+
 
   const getRoleIcon = (role) => {
     switch (role) {
@@ -144,9 +145,10 @@ const AdminUsers = () => {
                       <button
                         onClick={() => toggleBlockStatus(user.id, user.isBlocked)}
                         className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs ${user.isBlocked
-                            ? 'bg-red-100 text-red-800 hover:bg-red-200'
-                            : 'bg-green-100 text-green-800 hover:bg-green-200'
+                          ? 'bg-red-100 text-red-800 hover:bg-red-200'
+                          : 'bg-green-100 text-green-800 hover:bg-green-200' 
                           }`}
+                          disabled={user.role === 'admin'}
                       >
                         {user.isBlocked ? (
                           <>
@@ -160,7 +162,7 @@ const AdminUsers = () => {
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                      {new Date(user.createdAt || Date.now()).toLocaleDateString("en-GB", {
+                      {new Date(user.createdOn || Date.now()).toLocaleDateString("en-GB", {
                         day: "2-digit",
                         month: "2-digit",
                         year: "numeric"
@@ -178,8 +180,8 @@ const AdminUsers = () => {
                         <button
                           onClick={() => deleteUser(user.id)}
                           className={`p-2 rounded-full hover:bg-red-900/20 ${user.role === 'admin'
-                              ? 'text-gray-500 cursor-not-allowed'
-                              : 'text-red-400 hover:text-red-300'
+                            ? 'text-gray-500 cursor-not-allowed'
+                            : 'text-red-400 hover:text-red-300'
                             }`}
                           title={user.role === 'admin' ? 'Cannot delete admin' : 'Delete User'}
                           disabled={user.role === 'admin'}

@@ -87,20 +87,20 @@ export default function FeatureCards() {
             <motion.div 
               key={index}
               variants={item}
-              className={`border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 ${hoveredIndex === index ? 'transform scale-105' : ''}`}
+              className={`border-2 border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-orange-200 transition-all duration-300 ${hoveredIndex === index ? 'transform scale-105 shadow-xl' : 'shadow-md'}`}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
               <div className={`${feature.color} mb-4`}>
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-gray-600 mb-3">{feature.desc}</p>
-              <p className="text-sm text-gray-500 font-medium">{feature.stats}</p>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
+              <p className="text-gray-600 mb-3 text-sm leading-relaxed">{feature.desc}</p>
+              <p className="text-sm text-gray-500 font-bold">{feature.stats}</p>
               
               {hoveredIndex === index && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <button className="text-sm font-medium text-orange-500 hover:text-orange-600">
+                <div className="mt-4 pt-4 border-t-2 border-gray-100">
+                  <button className="text-sm font-bold text-orange-500 hover:text-orange-600 transition-colors duration-300">
                     Learn more →
                   </button>
                 </div>
@@ -110,9 +110,12 @@ export default function FeatureCards() {
         </motion.div>
 
         <div className="mt-16 text-center">
-          <button onClick={() => navigate("/products")} className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-lg transition-colors duration-300 inline-flex items-center">
+          <button 
+            onClick={() => navigate("/products")} 
+            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 inline-flex items-center shadow-lg hover:shadow-xl hover:scale-105"
+          >
             Explore All Benefits
-            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>

@@ -1,198 +1,150 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
-import { useAuth } from './AuthContext';
-import { 
-  fetchOrdersByUser, 
-  createOrder, 
-  updateOrder, 
-  deleteOrder 
-} from '../services/api';
+import { createContext, useContext, useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
+import {
+  addToCartAPI,
+  getCartAPI,
+  updateCartItemAPI,
+  removeCartItemAPI,
+  clearCartAPI,
+} from "../services/cartService";
+
+import {
+  placeOrderAPI,
+  getOrdersAPI,
+  cancelOrderAPI,
+} from "../services/orderService";
+
+import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
 
-export function CartProvider({ children }) {
-  const { user, updateUserData } = useAuth();
+export const CartProvider = ({ children }) => {
+  const { user, authLoading } = useAuth();
+
   const [cart, setCart] = useState([]);
-  const [cartCount, setCartCount] = useState(0);
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      setCart(user.cart || []);
-      setCartCount(user.cart?.reduce((total, item) => total + item.quantity, 0) || 0);
-      loadUserOrders();
-    } else {
-      setCart([]);
-      setCartCount(0);
-      setOrders([]);
-    }
-  }, [user]);
-
-  const loadUserOrders = async () => {
-    if (!user?.id) return;
+  // -------------------------------------------------------
+  // Load Cart
+  // -------------------------------------------------------
+  const loadCart = async () => {
     try {
-      setLoadingOrders(true);
-      const userOrders = await fetchOrdersByUser(user.id);
-      setOrders(Array.isArray(userOrders) ? userOrders : []);
-    } catch (error) {
-      toast.error('Failed to load orders');
-      console.error('Error loading orders:', error);
-    } finally {
-      setLoadingOrders(false);
-    }
-  };
+      const res = await getCartAPI();
+      const items = res.data?.items || [];
 
-  const updateCart = async (newCart) => {
-    const updatedCart = Array.isArray(newCart) ? newCart : [];
-    setCart(updatedCart);
-    setCartCount(updatedCart.reduce((total, item) => total + (item.quantity || 0), 0));
-    
-    if (user) {
-      await updateUserData({ ...user, cart: updatedCart });
-    }
-  };
-
-  const addToCart = async (product) => {
-    if (!user) {
-      toast.error('Please login to add items to cart');
-      return false;
-    }
-
-    const existingItem = cart.find(item => item.id === product.id);
-    const maxQuantity = 5;
-    
-    let updatedCart;
-    
-    if (existingItem) {
-      if (existingItem.quantity >= maxQuantity) {
-        toast.error(`You can only add ${maxQuantity} of this item to your cart`);
-        return false;
-      }
-      
-      updatedCart = cart.map(item =>
-        item.id === product.id 
-          ? { ...item, quantity: item.quantity + 1 } 
-          : item
+      setCart(
+        items.map((i) => ({
+          id: i.id,
+          productId: i.productId,
+          name: i.productName,
+          brand: i.brandName,
+          price: i.price,
+          image: i.imageUrl,
+          quantity: i.quantity,
+          stock: i.currentStock,
+        }))
       );
-    } else {
-      updatedCart = [...cart, { 
-        ...product, 
-        quantity: 1 
-      }];
-    }
-    
-    await updateCart(updatedCart);
-    return true;
+    } catch {}
   };
 
-  const removeFromCart = async (productId) => {
-    const updatedCart = cart.filter(item => item.id !== productId);
-    await updateCart(updatedCart);
+  // ⭐ FIX → must wait for authLoading === false
+  useEffect(() => {
+    if (!authLoading && user) loadCart();
+    if (!authLoading && !user) setCart([]);
+  }, [authLoading, user]);
+
+  // -------------------------------------------------------
+  // Add to Cart
+  // -------------------------------------------------------
+  const addToCart = async (product) => {
+    try {
+      await addToCartAPI(product.id, 1);
+      await loadCart();
+      toast.success("Added to cart");
+    } catch {}
   };
 
-  const updateQuantity = async (productId, newQuantity) => {
-    if (newQuantity < 1) return;
-    
-    const maxQuantity = 5;
-    if (newQuantity > maxQuantity) {
-      toast.error(`Maximum ${maxQuantity} items allowed`);
-      return;
-    }
+  // -------------------------------------------------------
+  // Update Quantity
+  // -------------------------------------------------------
+  const updateQuantity = async (cartItemId, qty) => {
+    if (qty < 1) return;
+    try {
+      await updateCartItemAPI(cartItemId, qty);
+      loadCart();
+    } catch {}
+  };
 
-    const updatedCart = cart.map(item =>
-      item.id === productId 
-        ? { ...item, quantity: newQuantity } 
-        : item
-    );
-    
-    await updateCart(updatedCart);
+  // -------------------------------------------------------
+  // Remove Item
+  // -------------------------------------------------------
+  const removeFromCart = async (cartItemId) => {
+    try {
+      await removeCartItemAPI(cartItemId);
+      loadCart();
+    } catch {}
   };
 
   const clearCart = async () => {
-    await updateCart([]);
-  };
-
-  const totalPrice = cart.reduce(
-    (total, item) => total + ((item.price || 0) * (item.quantity || 0)),
-    0
-  );
-
-  const checkout = async (orderData) => {
-    if (!user || cart.length === 0) {
-      toast.error('Your cart is empty');
-      return null;
-    }
-
-    const newOrder = {
-      userId: user.id,
-      date: new Date().toISOString(),
-      items: [...cart],
-      total: totalPrice,
-      status: 'processing',
-      ...orderData
-    };
-
     try {
-      const createdOrder = await createOrder(newOrder);
-      setOrders(prev => [createdOrder, ...prev]);
-      await clearCart();
-      return createdOrder;
-    } catch (error) {
-      toast.error('Failed to create order');
-      console.error('Checkout error:', error);
-      throw error;
-    }
+      await clearCartAPI();
+      setCart([]);
+    } catch {}
   };
+
+  // -------------------------------------------------------
+  // LOAD ORDERS
+  // -------------------------------------------------------
+  const loadOrders = async () => {
+    if (!user) return;
+
+    setLoadingOrders(true);
+    try {
+      const res = await getOrdersAPI();
+      setOrders(res.data || []);
+    } catch {}
+    setLoadingOrders(false);
+  };
+
+  // ⭐ FIX → wait for auth to be ready
+  useEffect(() => {
+    if (!authLoading && user) loadOrders();
+    else if (!authLoading) setOrders([]);
+  }, [authLoading, user]);
 
   const cancelOrder = async (orderId) => {
     try {
-      await updateOrder(orderId, { status: 'cancelled' });
-      setOrders(prev => 
-        prev.map(order => 
-          order.id === orderId 
-            ? { ...order, status: 'cancelled' } 
-            : order
-        )
-      );
-      return true;
-    } catch (error) {
-      console.error('Cancel order error:', error);
-      throw error;
-    }
+      await cancelOrderAPI(orderId);
+      loadOrders();
+    } catch {}
   };
 
-  const removeOrder = async (orderId) => {
-    try {
-      await deleteOrder(orderId);
-      setOrders(prev => prev.filter(order => order.id !== orderId));
-      return true;
-    } catch (error) {
-      console.error('Delete order error:', error);
-      throw error;
-    }
-  };
+  const totalPrice = cart.reduce((t, n) => t + n.price * n.quantity, 0);
+  const cartCount = cart.reduce((t, n) => t + n.quantity, 0);
 
   return (
-    <CartContext.Provider 
-      value={{ 
-        cart, 
+    <CartContext.Provider
+      value={{
+        cart,
         cartCount,
+        cartItemsCount:cart.length,
+        totalPrice,
+        loadCart,
+        addToCart,
+        updateQuantity,
+        removeFromCart,
+        clearCart,
+
         orders,
         loadingOrders,
-        addToCart, 
-        removeFromCart, 
-        updateQuantity,
-        clearCart,
-        totalPrice,
-        checkout,
+        loadOrders,
         cancelOrder,
-        removeOrder
       }}
     >
       {children}
     </CartContext.Provider>
   );
-}
+};
 
 export const useCart = () => useContext(CartContext);

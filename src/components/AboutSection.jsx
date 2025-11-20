@@ -38,16 +38,15 @@ const AboutSection = () => {
               who demand nothing but the best.
             </p>
             
-            <div className="grid grid-cols-2 gap-6 mb-8">
+             <div className="grid grid-cols-2 gap-6 mb-8">
               {stats.map((stat, index) => (
-                // Changed from motion.div to div and removed hover animation
                 <div
                   key={index}
-                  className="bg-white/5 backdrop-blur-sm p-6 rounded-xl border border-white/10"
+                  className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border-2 border-white/10 hover:border-orange-500/50 transition-all duration-300 hover:shadow-xl"
                 >
                   <div className="text-orange-500 mb-3">{stat.icon}</div>
-                  <h3 className="text-2xl font-bold mb-1">{stat.value}</h3>
-                  <p className="text-gray-300 text-sm">{stat.label}</p>
+                  <h3 className="text-3xl font-bold mb-1">{stat.value}</h3>
+                  <p className="text-gray-300 text-sm font-semibold">{stat.label}</p>
                 </div>
               ))}
             </div>

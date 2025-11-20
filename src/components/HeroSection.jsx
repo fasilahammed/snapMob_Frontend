@@ -67,12 +67,11 @@ export default function HeroSection() {
                     <p className="text-lg mb-8">
                         {videos[currentVideoIndex].subtitle}
                     </p>
-                    <div className="flex gap-4">
-                        {/* Show only if user is NOT logged in */}
+                   <div className="flex gap-4">
                         {!user && (
                             <Link
                                 to="/register"
-                                className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg shadow-md transition-colors"
+                                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-bold hover:scale-105"
                             >
                                 Get Started
                             </Link>
@@ -80,10 +79,9 @@ export default function HeroSection() {
 
                         <Link
                             to="/products"
-                            className={`px-6 py-3 rounded-lg shadow-md transition-colors 
-                                 ${user
-                                    ? 'bg-orange-600 hover:bg-orange-700 text-white'  // Logged in → orange style
-                                    : 'bg-white text-orange-600 hover:bg-orange-50 border border-orange-600' // Not logged in → white style
+                            className={`px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-bold ${user
+                                    ? 'bg-orange-500 hover:bg-orange-600 text-white hover:scale-105'
+                                    : 'bg-white text-orange-600 hover:bg-orange-50 border-2 border-orange-500 hover:border-orange-600'
                                 }`}
                         >
                             Browse Phones
